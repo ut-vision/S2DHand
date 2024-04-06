@@ -349,10 +349,6 @@ def eval_pair(log, setup=0, pair=(0, 1)):
                     JNUM, 1)
                 gt2, pred2, R2, valid2 = np.array(gt2), np.array(pred2), np.array(R2), np.array(valid2).reshape(
                     JNUM, 1)
-                # if hand == 'left':
-                #     print(gt1 @ R1)
-                #     print(gt2 @ R2)
-                #     print('================')
 
                 mpjpe_ls.append(mpjpe_per_hand(pred1, gt1, valid1))
                 mpjpe_ls.append(mpjpe_per_hand(pred2, gt2, valid2))
@@ -368,16 +364,4 @@ if __name__ == '__main__':
     num_ls, mp_ls = [], []
     for j in ls:
         print(j)
-        # mpjpe, num = merge_result(j)
-        # merge_result(j)
         merge_result_wo_gt(j)
-        # num_ls.append(num)
-        # mp_ls.append(mpjpe)
-
-    # l = len(mp_ls)
-    # num_ls = np.array(num_ls)
-    # mp_ls = np.array(mp_ls)
-    # mp_ls *= num_ls
-    #
-    # print(np.sum(mp_ls[:l // 2]) / np.sum(num_ls[:l // 2]),
-    #       np.sum(mp_ls[l // 2:]) / np.sum(num_ls[l // 2:]))

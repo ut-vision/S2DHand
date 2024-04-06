@@ -324,6 +324,7 @@ def one_forward_pass(metas, model, criterion, args, train=True):
             'lm': location_map,
             "flag_3d": flag_3d,
             "joint": joint,
+            "uv": metas['kp2d'],
             "hand": metas['hand_type']
         }
         if args.evaluate:
@@ -389,7 +390,7 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
         if not os.path.exists(os.path.dirname(logpath)):
             os.makedirs(os.path.dirname(logpath))
         fw = open(logpath, 'w')
-        fw.write(f'img seq cam frame pred gt valid camrot campos focal pricpt hand handpred abs_depth depth_info\n')
+        fw.write(f'img seq cam frame pred gt valid camrot campos focal pricpt hand handpred abs_depth depth_info uv\n')
 
     with torch.no_grad():
         for i, (metas1, metas2) in tqdm(enumerate(val_loader)):
@@ -480,6 +481,7 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
                     fo = ','.join([str(u) for u in focal1d[l]])
                     pr = ','.join([str(u) for u in princpt1d[l]])
                     hpred, ab, d = '0', '0', '0'
+                    # uv = ','.join([str(u) for u in uv1d[l]])
 
                     fw.write(' '.join(
                         [img, seq, cam, str(frame.numpy()), p, g, v, rot, pos, fo, pr, hand, hpred, ab, d]) + '\n')

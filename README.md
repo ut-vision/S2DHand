@@ -38,7 +38,7 @@ Material related to our paper is available via the following links:
 - Paper: https://arxiv.org/pdf/2403.04381.pdf
 - Code: https://github.com/ut-vision/S2DHand
 - AssemblyHands dataset: https://assemblyhands.github.io/
-- Pre-trained models: 
+- Pre-trained models: https://drive.google.com/file/d/1rn-ez1rBjELTgcx1hU4gXgkH41ezBJbK/view?usp=sharing
 
 ## System requirements
 
@@ -59,6 +59,7 @@ Please download the pre-trained models and AssemblyHands dataset first. Assuming
     - S2DHand-pretrain 
         - ckp_detnet_37.pth
         - ckp_detnet_68.pth
+        - evaluation
 ```
 Please run the following command to register the pre-trained model and data.
 ```
