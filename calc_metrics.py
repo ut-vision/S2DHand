@@ -4,6 +4,7 @@ import os.path
 
 import numpy as np
 import time
+import argparse
 from utils.func import R_from_2poses, merge_from_2hands, matrix_from_quaternion, quaternion_from_matrix
 from consistency import mpjpe_per_hand
 
@@ -132,8 +133,18 @@ def calc_merged_metric(log_path, use_gt=False, R12=None, R21=None, dynamic_R=Fal
 
 
 if __name__ == '__main__':
-    logs = glob.glob(
-        '/large/lruicong/cvpr24/release/S2DHand/in_dataset_adapt/evaluation/ah/*-set0-0,1.log')
+    parser = argparse.ArgumentParser(description='PyTorch Train: DetNet')
+    # Dataset setting
+    parser.add_argument('--checkpoint', type=str, default='in_dataset_adapt/evaluation/ah',
+                        help='save dir of the test logs')
+    parser.add_argument('--setup', type=int, default=0, help='id of headset')
+    parser.add_argument('--pair', type=str, default='1,2', help='id of dual-camera pair')
+    parser.add_argument('-eid', '--evaluate_id', default=None, type=int, metavar='N',
+                        help='number of data loading workers (default: 8)')
+    args = parser.parse_args()
+
+    eid = args.evaluate_id if args.evaluate_id is not None else '*'
+    logs = glob.glob(os.path.join(args.checkpoint, f'{eid}-set{args.setup}-{args.pair}.log'))
     logs.sort()
     print(logs)
     R_config = json.load(open('./R_config.json'))
@@ -151,7 +162,3 @@ if __name__ == '__main__':
         merge += mer * n
         q_diffs += q_diff
     print(f'total:{num}, mean mono:{mono / num:.2f}, mean merge:{merge / num:.2f}')
-
-    # q_diffs = np.array(q_diffs)
-    # print(q_diffs.shape)
-    # np.save('/large/lruicong/temp/r.npy', q_diffs)

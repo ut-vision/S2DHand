@@ -110,7 +110,7 @@ def R_from_2poses(joints0, joints1, is_torch=False):
         return U @ Vt
 
 
-# Used only for calc.py
+# Used only for calc_metrics.py
 def merge_from_2hands(hands1, hands2, valids1, valids2, R12=None, R21=None):
     if isinstance(hands1, torch.Tensor):
         hands1 = hands1.detach().cpu().numpy()

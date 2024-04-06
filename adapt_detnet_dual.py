@@ -441,32 +441,27 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
                 pred_joint_align = func.cross_merge_two_vec(pred_joint_align1, pred_joint_align2)
                 gt_joint = func.cross_merge_two_vec(gt_joint1, gt_joint2)
                 pred1d, gt1d = pred_joint_align.reshape(-1, 21 * 3), gt_joint.reshape(-1, 21 * 3)
-                # print(pred1d.shape, gt1d.shape)
+
                 bs = len(pred_joint_align1)
                 valid = func.cross_merge_two_vec(valid1, valid2)
-                # print('valid', valid.shape)
 
                 fcl1, prcpt1 = metas1['cam_param']['focal'], metas1['cam_param']['princpt']
                 focal1d1 = [[fcl1[0][f].numpy(), fcl1[1][f].numpy()] for f in range(bs)]
                 fcl2, prcpt2 = metas2['cam_param']['focal'], metas2['cam_param']['princpt']
                 focal1d2 = [[fcl2[0][f].numpy(), fcl2[1][f].numpy()] for f in range(bs)]
                 focal1d = func.cross_merge_two_list(focal1d1, focal1d2)
-                # print('focal', np.array(focal1d).shape)
 
                 princpt1d1 = [[prcpt1[0][f].numpy(), prcpt1[1][f].numpy()] for f in range(bs)]
                 princpt1d2 = [[prcpt2[0][f].numpy(), prcpt2[1][f].numpy()] for f in range(bs)]
                 princpt1d = func.cross_merge_two_list(princpt1d1, princpt1d2)
-                # print('princpt', np.array(princpt1d).shape)
 
                 rot1d1 = [f.numpy().reshape(-1) for f in metas1['cam_param']['rot']]
                 rot1d2 = [f.numpy().reshape(-1) for f in metas2['cam_param']['rot']]
                 rot1d = func.cross_merge_two_list(rot1d1, rot1d2)
-                # print('rot', np.array(rot1d).shape)
 
                 pos1d1 = [f.numpy().reshape(-1) for f in metas1['cam_param']['pos']]
                 pos1d2 = [f.numpy().reshape(-1) for f in metas2['cam_param']['pos']]
                 pos1d = func.cross_merge_two_list(pos1d1, pos1d2)
-                # print('pos', np.array(pos1d).shape)
 
                 frame_ls = func.cross_merge_two_list(metas1['frame'], metas2['frame'])
                 seq_ls = func.cross_merge_two_list(metas1['seq_name'], metas2['seq_name'])

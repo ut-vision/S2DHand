@@ -29,8 +29,7 @@ def load_skeleton(path, joint_num):
     return skeleton
 
 
-def num_check(
-        path='/large/lruicong/cvpr24/AssemblyHands/output/asb_exp/evaluation/cross-AssemblyHands-Ego-test/19.log'):
+def num_check(path):
     # skeleton = load_skeleton(skeleton_path, JNUM * 2)
     lines = open(path).readlines()
     lines.pop(0)
@@ -85,8 +84,7 @@ def num_check(
           f' left:{left_num}, right:{right_num}')
 
 
-def gene_json_from_log(log_path='/large/lruicong/cvpr24/AssemblyHands/output/asb_exp/evaluation/cross-AssemblyHands'
-                                '-Ego-test/19.log'):
+def gene_json_from_log(log_path):
     tic = time.time()
     lines = open(log_path).readlines()
     lines.pop(0)
@@ -158,12 +156,7 @@ def avg_pred(preds, valids):
     return np.nanmean(preds_nan, axis=0)
 
 
-def merge_result(path='/large/lruicong/cvpr24/AssemblyHands/output/asb_exp/evaluation/cross-AssemblyHands-Ego-test'
-                      '/19.log.json'):
-    # num_check(path='/large/lruicong/cvpr24/AssemblyHands/output/test/evaluation/cross-AssemblyHands-Ego-test/6.log')
-    # exit()
-    # gene_json_from_log('/large/lruicong/cvpr24/AssemblyHands/output/asb_exp/evaluation/cross-AssemblyHands-Ego-test/19.log')
-    # exit()
+def merge_result(path):
     '''
     Validate whether using multi-view predictions can benefit the accuracy.
     1. Transform all the predictions to the same world coordinate system.
@@ -221,9 +214,7 @@ def R_from_2poses(joints0, joints1):
     return U @ Vt
 
 
-def merge_result_wo_gt(
-        path='/large/lruicong/cvpr24/AssemblyHands/output/asb_exp/evaluation/cross-AssemblyHands-Ego-test'
-             '/19.log.json'):
+def merge_result_wo_gt(path):
     '''
     Validate whether using multi-view predictions can benefit the accuracy.
     1. Transform all the predictions to the same world coordinate system.
@@ -290,9 +281,8 @@ def merge_result_wo_gt(
     return np.nanmean(mpjpe_ls), len(mpjpe_ls)
 
 
-def count_pair_num():
+def count_pair_num(path):
     tic = time.time()
-    path = '/large/lruicong/cvpr24/AssemblyHands/output/asb_exp/evaluation/cross-AssemblyHands-Ego-test/19.log.json'
     test_result = json.load(open(path))
     print(f'time consumed:{time.time() - tic:.2f}')
 
@@ -373,13 +363,7 @@ def eval_pair(log, setup=0, pair=(0, 1)):
 
 if __name__ == '__main__':
     import glob
-    # num_check('/large/lruicong/cvpr24/MinimalHand/checkpoints0/evaluation/ah/28.log')
-    # exit()
-    # gene_json_from_log('/large/lruicong/cvpr24/MinimalHand/checkpoints0/evaluation/ah/23.log')
-
-    # see the merged results, but can be replaced with calc.py
-    # eval_pair('/large/lruicong/cvpr24/MinimalHand/checkpoints0/evaluation/ah/19.log', setup=0, pair=(0, 2))
-    ls = glob.glob('/large/lruicong/cvpr24/MinimalHand/checkpoints0/evaluation/ah/28.log.json')
+    ls = glob.glob('./checkpoints0/evaluation/ah/28.log.json')
     ls.sort()
     num_ls, mp_ls = [], []
     for j in ls:
