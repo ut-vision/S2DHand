@@ -1,13 +1,13 @@
 import numpy as np
 
 
-def align_two_pred(pred1, pred2):
+def align_two_pred(pred1, pred2, root_idx=0):
     pred1_ = pred1.copy()
     pred2_ = pred2.copy()
 
     # gtj :B*21*3
     # prj :B*21*3
-    root_idx = 9  # root
+    # root_idx = 0  # root
     ref_bone_link = [0, 9]  # mid mcp
     pred2_align = pred2_.copy()
 
@@ -31,14 +31,14 @@ def align_two_pred(pred1, pred2):
     return pred1_, pred2_align, pred1_anchor, pred2_anchor, np.array(scales2)[:, np.newaxis, np.newaxis]
 
 
-def global_align(gtj0, prj0, key):
+def global_align(gtj0, prj0, key, root_idx=0):
     gtj = gtj0.copy()
     prj = prj0.copy()
 
     if key in ["stb", "rhd", "ah"]:
         # gtj :B*21*3
         # prj :B*21*3
-        root_idx = 9  # root
+        # root_idx = 0  # root
         ref_bone_link = [0, 9]  # mid mcp
         pred_align = prj.copy()
         for i in range(prj.shape[0]):
@@ -87,6 +87,32 @@ def global_align(gtj0, prj0, key):
             prj_valid_align.append(prj_valid_align_i)
 
         return np.array(gtj_valid), np.array(prj_valid_align)
+
+
+def visual_align(gtj0, prj0, key):
+    gtj = gtj0.copy()
+    prj = prj0.copy()
+
+    if key in ["stb", "rhd", "ah"]:
+        # gtj :B*21*3
+        # prj :B*21*3
+        root_idx = 0  # root
+        ref_bone_link = [0, 9]  # mid mcp
+        pred_align = prj.copy()
+        for i in range(prj.shape[0]):
+
+            pred_ref_bone_len = np.linalg.norm(prj[i][ref_bone_link[0]] - prj[i][ref_bone_link[1]])
+            gt_ref_bone_len = np.linalg.norm(gtj[i][ref_bone_link[0]] - gtj[i][ref_bone_link[1]])
+            scale = gt_ref_bone_len / pred_ref_bone_len
+            # scale = 0.0824 / pred_ref_bone_len
+
+            for j in range(21):
+                pred_align[i][j] = gtj[i][root_idx] + scale * (prj[i][j] - prj[i][root_idx])
+
+        # gtj -= gtj0[:, root_idx: root_idx + 1, :]
+        # pred_align -= pred_align[:, root_idx: root_idx + 1, :]
+
+        return gtj, pred_align
 
 
 def global_norm_align(gtj0, prj0, key):

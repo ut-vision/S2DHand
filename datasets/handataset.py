@@ -35,7 +35,7 @@ class HandDataset(torch.utils.data.Dataset):
     def __init__(self, data_split='train', data_root="/disk1/data", subset_name=['ah'], hand_side='right', sigma=1.0,
                  inp_res=128, hm_res=32, njoints=21, train=True, scale_jittering=0.1, center_jettering=0.1,
                  max_rot=np.pi, hue=0.15, saturation=0.5, contrast=0.5, brightness=0.5, blur_radius=0.5, vis=False,
-                 pic=-1, setup=0, pair=(1, 2)):
+                 pic=-1, setup=0, pair=(1, 2), root_idx=0):
 
         self.inp_res = inp_res  # 128 # network input resolution
         self.hm_res = hm_res  # 32  # out_testset hm resolution
@@ -57,7 +57,7 @@ class HandDataset(torch.utils.data.Dataset):
 
         self.datasets = []
         self.ref_bone_link = (0, 9)  # mid mcp
-        self.joint_root_idx = 9  # root
+        self.joint_root_idx = root_idx  # root
 
         self.vis = vis
 
@@ -392,6 +392,7 @@ class HandDataset(torch.utils.data.Dataset):
             'delta_map': delta_map,
             'flag_3d': flag,
             "joint": joint,
+            "kp2d": kp2d_ori,
             'hand_type': sample['hand_type']
         }
         if not self.train and 'cam_param' in sample.keys():

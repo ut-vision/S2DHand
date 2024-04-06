@@ -46,9 +46,10 @@ def parse_the_args():
     parser.add_argument('--alpha', type=float, default=0.7, help='the weight of consist and stable pseudo.')
     parser.add_argument('--avg', type=str, default='max', help='the way to generate pseudo labels.')
     parser.add_argument('--det_loss', dest='det_loss', action='store_true', help='Calculate detnet loss', default=True)
-    parser.add_argument('--setup', type=int, default=0)
-    parser.add_argument('--pair', type=str, default='1,2')
+    parser.add_argument('--setup', type=int, default=0, help='id of headset')
+    parser.add_argument('--pair', type=str, default='1,2', help='id of dual-camera pair')
     parser.add_argument('--initR', type=str, default='pred', help='ways to init quatn, pred or gt')
+    parser.add_argument('--root_idx', type=int, default=0, help='root joint id for alignment')
 
     parse_args = parser.parse_args()
     return parse_args
@@ -145,7 +146,8 @@ def main(args):
                 subset_name=test_set_name,
                 data_root=args.data_root,
                 pic=parse_args.pic if args.evaluate else -1,
-                setup=args.setup, pair=tuple(map(int, args.pair.split(',')))
+                setup=args.setup, pair=tuple(map(int, args.pair.split(','))),
+                root_idx=args.root_idx
             )
         elif test_set_name == 'eo':
             test_set_dic[test_set_name] = EgoDexter(
@@ -222,7 +224,8 @@ def main(args):
         center_jettering=0.1,
         max_rot=0.5 * np.pi,
         pic=parse_args.pic,
-        setup=args.setup, pair=tuple(map(int, args.pair.split(',')))
+        setup=args.setup, pair=tuple(map(int, args.pair.split(','))),
+        root_idx=args.root_idx
     )
 
     print("Total train dataset size: {}".format(len(train_dataset)))
@@ -346,7 +349,7 @@ def one_forward_pass(metas, model, criterion, args, train=True):
     results = model(clr)
     left_mapping = {'left': 1, 'right': 0}
     left_mask = torch.tensor([left_mapping[hand] for hand in metas['hand_type']])
-    results['xyz'][left_mask == 1, :, 0] *= -1
+    results['xyz'][left_mask == 1, :, 0] *= -1  # flip left hand back
     results['left_mask'] = left_mask
     ''' ----------------  Forward End   ---------------- '''
 
@@ -412,8 +415,8 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
             gt_joint1 = func.to_numpy(targets1['joint'])
             gt_joint2 = func.to_numpy(targets2['joint'])
 
-            gt_joint1, pred_joint_align1 = align.global_align(gt_joint1, pred_joint1, key=key)
-            gt_joint2, pred_joint_align2 = align.global_align(gt_joint2, pred_joint2, key=key)
+            gt_joint1, pred_joint_align1 = align.global_align(gt_joint1, pred_joint1, key=key, root_idx=args.root_idx)
+            gt_joint2, pred_joint_align2 = align.global_align(gt_joint2, pred_joint2, key=key, root_idx=args.root_idx)
             valid1, valid2 = metas1['vis'].numpy(), metas2['vis'].numpy()
             gt_joint1 *= 1000.
             pred_joint_align1 *= 1000
@@ -556,31 +559,18 @@ def train(train_loader, model, model_ema, criterion, optimizer, args, loss_all, 
 
         '''calculate pseudo-labels'''
         valid1, valid2 = metas1['vis'].numpy(), metas2['vis'].numpy()
-        pred_e1_align, pred_e2_align, pred_e1_anchor, pred_e2_anchor, scale_e2 = align.align_two_pred(pred_e1, pred_e2)
-        # pred_j1_align, pred_j2_align, pred_j1_anchor, pred_j2_anchor, scale_j2 = align.align_two_pred(pred_j1, pred_j2)
-        # print(np.linalg.norm(pred1_align + pred1_anchor - pred_joint1),
-        #       np.linalg.norm(pred2_align / scale2 + pred2_anchor - pred_joint2))
+        pred_e1_align, pred_e2_align, pred_e1_anchor,\
+            pred_e2_anchor, scale_e2 = align.align_two_pred(pred_e1, pred_e2, root_idx=args.root_idx)
 
         consis1_align, consis2_align = func.pseudo_from_2hands(pred_e1_align, pred_e2_align, valid1, valid2,
                                                                vmax_e1, vmax_e2, R12=R12, R21=R12.T, merge=args.avg)
-        # consis_j1_align, consis_j2_align = func.pseudo_from_2hands(pred_j1_align, pred_j2_align, valid1, valid2,
-        #                                                          R12=R12, R21=R12.T)
         stable1_align, stable2_align = func.stb_from_2hands(pred_e1_align, pred_e2_align, valid1, valid2, R12)
 
         consist1 = consis1_align + pred_e1_anchor
         consist2 = consis2_align / scale_e2 + pred_e2_anchor
-        # consist1[preds1_ema['left_mask'] == 1, :, 0] *= -1
-        # consist2[preds2_ema['left_mask'] == 1, :, 0] *= -1
-
-        # consis_j1 = consis_j1_align + pred_j1_anchor
-        # consis_j2 = consis_j2_align / scale_j2 + pred_j2_anchor
-        # consis_j1[preds1['left_mask'] == 1, :, 0] *= -1
-        # consis_j2[preds2['left_mask'] == 1, :, 0] *= -1
 
         stable1 = stable1_align + pred_e1_anchor
         stable2 = stable2_align / scale_e2 + pred_e2_anchor
-        # stable1[preds1_ema['left_mask'] == 1, :, 0] *= -1
-        # stable2[preds2_ema['left_mask'] == 1, :, 0] *= -1
 
         pseudo1 = args.alpha * consist1 + (1 - args.alpha) * stable1
         pseudo2 = args.alpha * consist2 + (1 - args.alpha) * stable2
@@ -603,9 +593,6 @@ def train(train_loader, model, model_ema, criterion, optimizer, args, loss_all, 
         hmap1, hmap2 = preds1_ema['h_map'].clone().detach(), preds2_ema['h_map'].clone().detach()
         lmap1, dmap1 = torch.from_numpy(lmap1).cuda(), torch.from_numpy(dmap1).cuda()
         lmap2, dmap2 = torch.from_numpy(lmap2).cuda(), torch.from_numpy(dmap2).cuda()
-        # print(lmap1.shape, np.sum(lmap1), dmap1.shape, np.sum(dmap1))
-        # print(lmap2.shape, np.sum(lmap2), dmap2.shape, np.sum(dmap2))
-        # print(hmap1.shape, hmap2.shape)
 
         '''calculate loss'''
         total_loss = torch.Tensor([0]).cuda()
@@ -616,7 +603,6 @@ def train(train_loader, model, model_ema, criterion, optimizer, args, loss_all, 
         det_total_loss2, losses, batch_3d_size = criterion['det'].compute_loss(preds2, targets2, targets2)
         total_loss += det_total_loss2
         targets2['batch_3d_size'] = batch_3d_size
-        # exit()
 
         am_loss_hm.update(losses['det_hm'].item(), targets2['batch_size'])
         am_loss_dm.update(losses['det_dm'].item(), targets2['batch_3d_size'].item())

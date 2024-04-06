@@ -227,7 +227,7 @@ def get_kp2d_mini_scale(annots):
 #
 #     return ori_crop_scale * scale_factor
 
-def get_ori_crop_scale(mask, side, kp2d, mask_flag=True, scale_factor=1.75):
+def get_ori_crop_scale(mask, side, kp2d, mask_flag=True, scale_factor=2.0):
     kp2d_mini_scale = get_kp2d_mini_scale(kp2d)
 
     ori_crop_scale = kp2d_mini_scale

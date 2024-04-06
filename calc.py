@@ -133,10 +133,10 @@ def calc_merged_metric(log_path, use_gt=False, R12=None, R21=None, dynamic_R=Fal
 
 if __name__ == '__main__':
     logs = glob.glob(
-        '/large/lruicong/cvpr24/DualMini/ablation/no_momentum/*/evaluation/ah/*-set1-0,1.log')
+        '/large/lruicong/cvpr24/release/S2DHand/in_dataset_adapt/evaluation/ah/*-set0-0,1.log')
     logs.sort()
     print(logs)
-    R_config = json.load(open('/large/lruicong/cvpr24/DualMini/R_config.json'))
+    R_config = json.load(open('./R_config.json'))
 
     q_diffs = []
     num, mono, merge = 0, 0, 0
