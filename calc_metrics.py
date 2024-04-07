@@ -126,8 +126,8 @@ def calc_merged_metric(log_path, use_gt=False, R12=None, R21=None, dynamic_R=Fal
 
     q_mean = np.mean(np.abs(q_diff_ls), axis=0)
     q_mean_str = ','.join([f'{u:.2f}' for u in q_mean])
-    print(f'{name} num:{len(mpjpe_ls)}, mono:{mono:.2f}, merge:{np.nanmean(mpjpe_ls):.2f}, '
-          f'q_mean:({q_mean_str})')
+    print(f'{name} num:{len(mpjpe_ls)}, Mono-M:{mono:.2f}, Dual-M:{np.nanmean(mpjpe_ls):.2f}, '
+          f'Rotation_quat_err:({q_mean_str})')
     # print(np.mean(sumf))
     return len(mpjpe_ls), mono, np.nanmean(mpjpe_ls), q_diff_ls
 
@@ -161,4 +161,4 @@ if __name__ == '__main__':
         mono += mo * n
         merge += mer * n
         q_diffs += q_diff
-    print(f'total:{num}, mean mono:{mono / num:.2f}, mean merge:{merge / num:.2f}')
+    print(f'total:{num}, mean Mono-M:{mono / num:.2f}, mean Dual-M:{merge / num:.2f}')

@@ -59,7 +59,6 @@ Please download the pre-trained models and AssemblyHands dataset first. Assuming
     - S2DHand-pretrain 
         - ckp_detnet_37.pth
         - ckp_detnet_68.pth
-        - evaluation
 ```
 Please run the following command to register the pre-trained model and data.
 ```
@@ -69,84 +68,124 @@ mkdir data/assemblyhands
 ln -s ${DATA_DIR}/AssemblyHands/* data/assemblyhands
 ```
 
-### Single-to-Dual Views Adaptation (Training)
+### Single-to-Dual-View Adaptation (Training)
 
-`run.sh` provides a complete procedure of training and testing.
+`run.sh` provides a complete procedure of training and testing. The `adapt_detnet_dual.py` automatically tests the adapted model after each epoch of adaptation.
 
-We provide two optional arguments, `--stb` and `--pre`. They repersent two different network components, which could be found in our paper.
+We provide several arguments for adaptation:
 
-`--source` and `--target` represent the datasets used as the pre-training set and the dataset adapting to. It is recommended to use `gaze360, eth-mv-train` as `--source` and use `eth-mv` as `--target`. Please see `config.yaml` for the dataset configuration.
+`-trs` and `-tes`. They represent training and testing dataset, please set it to "ah" (assemblyhands).
 
-`--pairID` represents the index of dual-camera pair to adapt, ranging from 0 to 8.
+`--root_idx` represents the root joint index for alignment. Remember to set it as 0 for in-dataset adaptation while 9 for cross-dataset. This is because the pre-trained models are trained under different `root_idx`s.
 
-`--i` represents the index of person which is used as the testing set. It is recommended to set it as -1 for using all the person as the training set.
+`--pic` number of image pairs for adaptation or evaluation, set to `--pic=-1` for using all image pairs..
 
-`--pic` represents the number of image pairs for adaptation.
+`--checkpoint` directory to save models or load the model for evaluation.
 
-We also provide other arguments for adjusting the hyperparameters in our UVAGaze architecture, which could be found in our paper.
+`--resume` remember to add this argument for adaptation from an initial model.
+
+`--evaluate` please use this argument of testing/evaluating an existing model.
+
+`-eid, --evaluate_id` determines which epoch's model is used for adaptation or evaluation. Note that the code will first look for the model in `--checkpoint`.
+
+`--epochs` number of adaptation epochs.
+
+`--start_epoch` start epoch for saving models.
+
+`--setup` can be set as 0 or 1, which stands for the id of the two headsets from AssemblyHands.
+
+`--pair` determines which dual-camera pair is used for adaptation for evaluation. Possible values: `0,1 0,2 0,3 1,2 1,3 2,3`.
+
+`--gpus` gpu id.
+
+
+
+We also provide other arguments for adjusting the hyperparameters in our S2DHand architecture, which could be found in our paper.
 
 For example, run code like:
 
 ```bash
-python3 adapt.py --i -1 --cams 18 --pic 256 --bs 32  --pairID 0 --savepath eth2eth --source eth-mv-train --target eth-mv --gpu 0 --stb --pre
+python3 adapt_detnet_dual.py -trs ah -tes ah --root_idx 0 --pic 1024 --resume -eid 37 --epochs 10 --start_epoch 1 --gpus 0 --checkpoint in_dataset_adapt --setup 0 --pair 1,2
 ```
+
+If first running this code, the `pretrain/ckp_detnet_37.pth` model will be adapted to the camera pair `1,2` of headset 0. 1024 images pairs will be used and there are 10 adaptation epochs in total.
 
 ### Test
 
-`--i, --savepath, --target, --pairID` are the same as training. In addition to `eth-mv`, using `eth-mv100k` (a subset of ETH-MV) as `--target` is recommended for a faster testing.
+All arguments are the same as training.
 
-For example, run code like:
-
-```bash
-python3 test_pair.py --pairID 0 --savepath eth2eth --target eth-mv100k --gpu 0
-```
-
-**Note**: the result printed by `test_pair.py` is **NOT** the final result on the specific dual-camera pair. It contains evaluation results on the **FULL** testing set.
-
-Running `calc_metric.py` is needed to get four metrics on the pair we adapt to. These four metrics are the final results, which are described in our paper.
+Usually, extra testing is not necessary, as it will be automatically done after adaptation. Still, we can run code like:
 
 ```bash
-python3 calc_metric.py --pairID 0 --savepath eth2eth --source eth-mv-train --target eth-mv100k
+python3 train_detnet_dual.py -trs ah -tes ah --evaluate -eid 37 --gpus 0 --pic -1 --checkpoint pretrain --setup 0 --pair 1,3
 ```
-We have provided the evaluation result of baseline model. Its result can be seen after running the above code, "base pair: ...". The result should be like:
+
+This will test the pre-trained weights `pretrain/ckp_detnet_37.pth` on the camera pair `1,3` of headset 0.
+
+**Note**: the result printed is **NOT** the final result on the specific dual-camera pair. It only contains **SINGLE-VIEW** evaluation results.
+
+Running `calc_metrics.py` is needed to get two metrics on the pair we adapt to. These two metrics are the final results, which are described in our paper.
+
+```bash
+python3 calc_metrics.py --checkpoint in_dataset_adapt/evaluation/ah --setup 0 --pair 1,2
+```
+The `--checkpoint, --setup, --pair` arguments share the same definition with adaptation and testing. The result should be like:
 
 ```
-base pair: Mono err: xx; Dual-S err: xx; Dual-A err: xx; HP err: xx
-1: ...
-2: ...
+1-setx-x,x: num:..., Mono-M:..., Dual-M:..., ...
+2-setx-x,x: ...
 ...
-10: ...
+10-setx-x,x: ...
 ```
-
-The improvements brought by our method can be seen by comparing with the baseline results.
 
 Please refer to `run.sh` for a complete procedure from training to testing.
 
+### In-dataset & Cross-dataset adaptation
+Setting `-eid=37` indicates in-dataset adaptation, while `-eid=68` indicate cross-dataset. This is because `ckp_detnet_37.pth` is trained on AssemblyHands while `ckp_detnet_68.pth` is trained on RHD and GANerated Hand.
+
+**Remember to set `--root_idx=0` for in-dataset adaptation while `--root_idx=9` for cross-dataset.**
+
+### Visualization
+Run `visualize.py` for visualization. However, cropped assemblyhands images are required. Please refer here for our cropped images.
+
+Please run the following command to register the cropped data for visualization.
+```
+ln -s assemblyhands_crop data
+```
+
+Then, run code like:
+```bash
+python3 vosualize.py --checkpoint in_dataset_adapt/evaluation/ah -eid 10 --sample_idx 0 --setup 0 --pair 1,2
+```
+
+The `--sample_idx` indicates the index of sample for visualization. If it goes well, we can see the predictions and ground-truth labels on the images pair we choose.
+
 ## Citation
+
 
 If this work or code is helpful in your research, please cite:
 
 ```latex
-@inproceedings{liu2024uvagaze,
-  title={UVAGaze: Unsupervised 1-to-2 Views Adaptation for Gaze Estimation},
-  author={Liu, Ruicong and Lu, Feng},
-  booktitle={Proceedings of the AAAI conference on artificial intelligence},
-  year={2024}
+@inproceedings{liu2024single,
+ title = {Single-to-Dual-View Adaptation for Egocentric 3D Hand Pose Estimation},
+ author = {Liu, Ruicong and Ohkawa, Takehiko and Zhang, Mingfang and Sato, Yoichi},
+ booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+ pages = {0--0},
+ year = {2024}
 }
 ```
-If you are using our ETH-MV dataset, please also cite the original paper of ETH-XGaze:
+If you are using the detnet network in this project, please also cite its original paper:
 
 ```latex
-@inproceedings{zhang2020eth,
-  title={Eth-xgaze: A large scale dataset for gaze estimation under extreme head pose and gaze variation},
-  author={Zhang, Xucong and Park, Seonwook and Beeler, Thabo and Bradley, Derek and Tang, Siyu and Hilliges, Otmar},
-  booktitle={Computer Vision--ECCV 2020: 16th European Conference, Glasgow, UK, August 23--28, 2020, Proceedings, Part V 16},
-  pages={365--381},
-  year={2020},
-  organization={Springer}
+@inproceedings{zhou2020monocular,
+  title={Monocular real-time hand shape and motion capture using multi-modal data},
+  author={Zhou, Yuxiao and Habermann, Marc and Xu, Weipeng and Habibie, Ikhsanul and Theobalt, Christian and Xu, Feng},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={5346--5355},
+  year={2020}
 }
 ```
 
 ## Contact
 
-For any questions, including algorithms and datasets, feel free to contact me by email: `liuruicong(at)buaa.edu.cn`
+For any questions, including algorithms and datasets, feel free to contact me by email: `lruicong(at)iis.u-tokyo.ac.jp`
