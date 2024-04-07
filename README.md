@@ -184,6 +184,7 @@ If you are using the detnet network in this project, please also cite its origin
   year={2020}
 }
 ```
+This project is built on an unofficial PyTorch reimplementation of `Zhou et al. Monocular real-time hand shape and motion capture using multi-modal data. CVPR2020`. Original project page: https://github.com/MengHao666/Minimal-Hand-pytorch.
 
 ## Contact
 
