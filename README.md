@@ -10,7 +10,7 @@ Our paper is accepted by **CVPR-2024**
 
 <div align=center>  <img src="figures/teaser.png" alt="Teaser" width="500" align="bottom" /> </div>
 
-**Picture:**  *Overview of the proposed Unsupervised 1-to-2 Views Adaption framework for adapting a single-view estimator to flexible dual views.*
+**Picture:**  *Overview of the proposed Single-to-Dual-view framework for adapting a traditional single-view hand pose estimator to arbitrary dual views.*
 
 <div align=center>  <img src="./figures/overview.png" alt="Main image" width="800" align="center" /> </div>
 
@@ -146,7 +146,7 @@ Setting `-eid=37` indicates in-dataset adaptation, while `-eid=68` indicate cros
 **Remember to set `--root_idx=0` for in-dataset adaptation while `--root_idx=9` for cross-dataset.**
 
 ### Visualization
-Run `visualize.py` for visualization. However, cropped assemblyhands images are required. Please refer here for our cropped images.
+Run `visualize.py` for visualization. However, cropped assemblyhands images are required. Please refer [here](https://drive.google.com/file/d/1hhfzHzlhjKFLkhgkxKRG_W7rc-2eFwWy/view?usp=sharing) for our cropped images.
 
 Please run the following command to register the cropped data for visualization.
 ```
@@ -155,13 +155,12 @@ ln -s assemblyhands_crop data
 
 Then, run code like:
 ```bash
-python3 vosualize.py --checkpoint in_dataset_adapt/evaluation/ah -eid 10 --sample_idx 0 --setup 0 --pair 1,2
+python3 visualize.py --checkpoint in_dataset_adapt/evaluation/ah -eid 10 --sample_idx 0 --setup 0 --pair 1,2
 ```
 
 The `--sample_idx` indicates the index of sample for visualization. If it goes well, we can see the predictions and ground-truth labels on the images pair we choose.
 
 ## Citation
-
 
 If this work or code is helpful in your research, please cite:
 
