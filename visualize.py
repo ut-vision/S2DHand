@@ -39,7 +39,6 @@ def visualize_3d_joints(idx, checkpoint, eid=37, setup='set0', pair='0,1', is_gt
     lines.pop(0)
     mono = float(lines.pop(-1).split(':')[-1])
     line_num = len(lines)
-    print(line_num)
 
     imgs, joints, fs, ps, valids = [], [], [], [], []
     for l in range(idx * 2, idx * 2 + 2):
