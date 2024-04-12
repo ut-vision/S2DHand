@@ -117,7 +117,7 @@ All arguments are the same as training.
 Usually, extra testing is not necessary, as it will be automatically done after adaptation. Still, we can run code like:
 
 ```bash
-python3 train_detnet_dual.py -trs ah -tes ah --evaluate -eid 37 --gpus 0 --pic -1 --checkpoint pretrain --setup 0 --pair 1,3
+python3 adapt_detnet_dual.py -trs ah -tes ah --evaluate -eid 37 --gpus 0 --pic -1 --checkpoint pretrain --setup 0 --pair 1,3
 ```
 
 This will test the pre-trained weights `pretrain/ckp_detnet_37.pth` on the camera pair `1,3` of headset 0.
