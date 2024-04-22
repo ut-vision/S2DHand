@@ -68,6 +68,8 @@ mkdir data/assemblyhands
 ln -s ${DATA_DIR}/AssemblyHands/* data/assemblyhands
 ```
 
+Optional: This code will automatically check all invalid data when first run, which takes lots of time. To save time, you can download the pre-generated invalid.txt [here](https://drive.google.com/file/d/19wZ0qaB6VivI7JxN-1Wlr0LP3aVHzRt8/view?usp=sharing) and move it to `${DATA_DIR}/AssemblyHands/annotations/${split}`. For example, move `invalid_train_ego.txt` to `${DATA_DIR}/AssemblyHands/annotations/train`.  
+
 ### Single-to-Dual-View Adaptation (Training)
 
 `run.sh` provides a complete procedure of training and testing. The `adapt_detnet_dual.py` automatically tests the adapted model after each epoch of adaptation.
