@@ -64,7 +64,7 @@ def visualize_3d_joints(idx, checkpoint, eid=37, setup='set0', pair='0,1', is_gt
         ps.append(pricpt)
         valids.append(valid)
 
-    if eid not in [37, 68]:
+    if eid not in [37, 68]:  # These are the index of pre-trained models
         anchors = [joints[k][0, :] for k in range(len(joints))]
         joint0_align = joints[0] - joints[0][0, :]
         joint1_align = joints[1] - joints[1][0, :]
