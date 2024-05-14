@@ -52,14 +52,14 @@ def visualize_3d_joints(idx, checkpoint, eid=37, setup='set0', pair='0,1', is_gt
 
         gt = np.array(line[5].split(',')).astype(np.float64).reshape(JNUM, 3)
         pred = np.array(line[4].split(',')).astype(np.float64).reshape(JNUM, 3)
-        visual = gt if is_gt else pred
+        visual_joints = gt if is_gt else pred
 
         focal = np.array(line[9].split(',')).astype(np.float64)
         pricpt = np.array(line[10].split(',')).astype(np.float64)
         valid = np.array(line[6].split(',')).astype(np.float64).reshape(JNUM, )
 
         imgs.append(img)
-        joints.append(visual)
+        joints.append(visual_joints)
         fs.append(focal)
         ps.append(pricpt)
         valids.append(valid)
@@ -74,8 +74,8 @@ def visualize_3d_joints(idx, checkpoint, eid=37, setup='set0', pair='0,1', is_gt
         joints = [merge0 + anchors[0], merge1 + anchors[1]]
 
     for i in range(2):
-        img, visual, focal, pricpt = imgs[i], joints[i], fs[i], ps[i]
-        kp = cam2pixel(visual, focal, pricpt).astype(np.int32)
+        img, visual_joints, focal, pricpt = imgs[i], joints[i], fs[i], ps[i]
+        kp = cam2pixel(visual_joints, focal, pricpt).astype(np.int32)
         x_points = kp[:, 0]
         y_points = kp[:, 1]
         x_points = x_points.astype(np.int32)
