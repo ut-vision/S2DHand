@@ -491,7 +491,9 @@ class AssemblyHandsDataset(torch.utils.data.Dataset):
             'my_scale': my_scale,
             'joint': kp3d,
             'world_joint': data['joint']['world_coord'],
-            # 原文件里的worldjoint，不能直接将结果比较，需要先将cam坐标乘1000，再变回原来ah顺序，再转成世界坐标才能和这个世界坐标比较
+            # The worldjoint in the original file cannot directly compare the results.
+            # You need to multiply the cam coordinates by 1000, then change them back to the original ah order,
+            # and then convert them into world coordinates to compare with this world coordinate.
             'hand_type': data["hand_type"],
             'vis': vis,
             'cam_param': meta_info['cam_param_updated'],
