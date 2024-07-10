@@ -37,7 +37,7 @@ Material related to our paper is available via the following links:
 
 - Paper: https://arxiv.org/pdf/2403.04381.pdf
 - Code: https://github.com/ut-vision/S2DHand
-- AssemblyHands dataset: https://assemblyhands.github.io/
+- AssemblyHands dataset (only ego images required): https://assemblyhands.github.io/. *By July 10th 2024, the test annotations of AssemblyHands have not been released. To run our code, you can revise the `data_split` arguments to `data_split='val'` in `adapt_detnet_dual.py` (Lines [144](https://github.com/ut-vision/S2DHand/blob/a3d14c27553330709056b414feec020fb1dbf681/adapt_detnet_dual.py#L144) and [219](https://github.com/ut-vision/S2DHand/blob/a3d14c27553330709056b414feec020fb1dbf681/adapt_detnet_dual.py#L219)). The validation set has ground-truth annotations so the code should be runnable.* 
 - Pre-trained models: https://drive.google.com/file/d/1rn-ez1rBjELTgcx1hU4gXgkH41ezBJbK/view?usp=sharing
 
 ## System requirements
