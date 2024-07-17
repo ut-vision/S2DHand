@@ -141,7 +141,7 @@ def main(args):
     for test_set_name in args.datasets_test:
         if test_set_name in ['stb', 'rhd', 'do', 'ah']:
             test_set_dic[test_set_name] = HandDataset(
-                data_split='test',
+                data_split='val',
                 train=False,
                 subset_name=test_set_name,
                 data_root=args.data_root,
@@ -151,7 +151,7 @@ def main(args):
             )
         elif test_set_name == 'eo':
             test_set_dic[test_set_name] = EgoDexter(
-                data_split='test',
+                data_split='val',
                 data_root=args.data_root,
                 hand_side="right"
             )
@@ -216,7 +216,7 @@ def main(args):
 
     # 4 Training branch
     train_dataset = HandDataset(
-        data_split='test',
+        data_split='val',
         train=False,
         subset_name=args.datasets_train,
         data_root=args.data_root,
@@ -390,7 +390,7 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
         if not os.path.exists(os.path.dirname(logpath)):
             os.makedirs(os.path.dirname(logpath))
         fw = open(logpath, 'w')
-        fw.write(f'img seq cam frame pred gt valid camrot campos focal pricpt hand handpred abs_depth depth_info uv\n')
+        fw.write(f'img seq cam frame pred gt valid camrot campos focal pricpt hand pred_trans gt_trans\n')
 
     with torch.no_grad():
         for i, (metas1, metas2) in tqdm(enumerate(val_loader)):
@@ -416,13 +416,22 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
             gt_joint1 = func.to_numpy(targets1['joint'])
             gt_joint2 = func.to_numpy(targets2['joint'])
 
-            gt_joint1, pred_joint_align1 = align.global_align(gt_joint1, pred_joint1, key=key, root_idx=args.root_idx)
-            gt_joint2, pred_joint_align2 = align.global_align(gt_joint2, pred_joint2, key=key, root_idx=args.root_idx)
+            gt_joint1, pred_joint_align1, \
+                gt_joint_tr1, pred_joint_align_tr1 = align.global_align(gt_joint1, pred_joint1, key=key,
+                                                                        root_idx=args.root_idx)
+            gt_joint2, pred_joint_align2, \
+                gt_joint_tr2, pred_joint_align_tr2 = align.global_align(gt_joint2, pred_joint2, key=key,
+                                                                        root_idx=args.root_idx)
             valid1, valid2 = metas1['vis'].numpy(), metas2['vis'].numpy()
+
             gt_joint1 *= 1000.
-            pred_joint_align1 *= 1000
+            gt_joint_tr1 *= 1000.
             gt_joint2 *= 1000.
+            gt_joint_tr2 *= 1000.
+            pred_joint_align1 *= 1000
+            pred_joint_align_tr1 *= 1000.
             pred_joint_align2 *= 1000
+            pred_joint_align_tr2 *= 1000.
 
             if 'vis' in metas1.keys():
                 for targj, predj_a, kp_vis in zip(gt_joint1, pred_joint_align1, valid1):
@@ -441,7 +450,10 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
             if args.evaluate or write_epoch:
                 pred_joint_align = func.cross_merge_two_vec(pred_joint_align1, pred_joint_align2)
                 gt_joint = func.cross_merge_two_vec(gt_joint1, gt_joint2)
+                pred_joint_align_tr = func.cross_merge_two_vec(pred_joint_align_tr1, pred_joint_align_tr2)
+                gt_joint_tr = func.cross_merge_two_vec(gt_joint_tr1, gt_joint_tr2)
                 pred1d, gt1d = pred_joint_align.reshape(-1, 21 * 3), gt_joint.reshape(-1, 21 * 3)
+                pred1d_tr, gt1d_tr = pred_joint_align_tr.reshape(-1, 21 * 3), gt_joint_tr.reshape(-1, 21 * 3)
 
                 bs = len(pred_joint_align1)
                 valid = func.cross_merge_two_vec(valid1, valid2)
@@ -480,11 +492,11 @@ def validate(val_loader, model, criterion, key, epoch, args, stop=-1, write_epoc
                     pos = ','.join([str(u) for u in pos1d[l]])
                     fo = ','.join([str(u) for u in focal1d[l]])
                     pr = ','.join([str(u) for u in princpt1d[l]])
-                    hpred, ab, d = '0', '0', '0'
-                    # uv = ','.join([str(u) for u in uv1d[l]])
+                    p_tr = ','.join([str(u) for u in pred1d_tr[l]])
+                    g_tr = ','.join([str(u) for u in gt1d_tr[l]])
 
                     fw.write(' '.join(
-                        [img, seq, cam, str(frame.numpy()), p, g, v, rot, pos, fo, pr, hand, hpred, ab, d]) + '\n')
+                        [img, seq, cam, str(frame.numpy()), p, g, v, rot, pos, fo, pr, hand, p_tr, g_tr]) + '\n')
                     count += 1
 
             if stop != -1 and i >= stop:
@@ -556,7 +568,7 @@ def train(train_loader, model, model_ema, criterion, optimizer, args, loss_all, 
 
         '''calculate pseudo-labels'''
         valid1, valid2 = metas1['vis'].numpy(), metas2['vis'].numpy()
-        pred_e1_align, pred_e2_align, pred_e1_anchor,\
+        pred_e1_align, pred_e2_align, pred_e1_anchor, \
             pred_e2_anchor, scale_e2 = align.align_two_pred(pred_e1, pred_e2, root_idx=args.root_idx)
 
         consis1_align, consis2_align = func.pseudo_from_2hands(pred_e1_align, pred_e2_align, valid1, valid2,

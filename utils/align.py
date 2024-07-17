@@ -51,10 +51,10 @@ def global_align(gtj0, prj0, key, root_idx=0):
             for j in range(21):
                 pred_align[i][j] = gtj[i][root_idx] + scale * (prj[i][j] - prj[i][root_idx])
 
-        gtj -= gtj0[:, root_idx: root_idx + 1, :]
-        pred_align -= pred_align[:, root_idx: root_idx + 1, :]
+        gtj_wrist_align = gtj - gtj0[:, root_idx: root_idx + 1, :]
+        pred_wrist_align = pred_align - pred_align[:, root_idx: root_idx + 1, :]
 
-        return gtj, pred_align
+        return gtj_wrist_align, pred_wrist_align, gtj, pred_align
 
     if key in ["do", "eo"]:
         # gtj :B*5*3
